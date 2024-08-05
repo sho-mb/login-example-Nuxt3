@@ -75,12 +75,19 @@ const getInitialData = () => ({
 
 const form = ref<Register>(getInitialData())
 
-const register = async (data : Register | RegisterErrors) => {
+const register = async (data: Register | RegisterErrors) => {
   if ('loginId' in data) {
+    type requestDataType = Omit<Register, "cPassword">
+    const requestData: requestDataType = {
+      loginId: data.loginId as string,
+      password: data.password as string,
+      email: data.email as string,
+    }
+    
     try {
       const response = await $fetch('/api/register', {
         method: 'POST',
-        body: data,
+        body: requestData,
       })
       message.value = response.message 
       if (response.status === 200) {

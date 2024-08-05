@@ -1,15 +1,19 @@
 import { promises as fs } from 'fs';
 import { join } from 'path';
+import { checkPassword } from '~/utils/bcryptUtil';
 
 export default defineEventHandler(async (event) => {
-  const body = await readBody(event)
+  const { password :inputPassword, loginId: inputLoginId} = await readBody(event)
   const dataPath = join(process.cwd(), 'data', 'data.json');
 
   try {
     const rawData = await fs.readFile(dataPath, 'utf8')
-    const data = JSON.parse(rawData)
+    const { password: hash, loginId } = JSON.parse(rawData)
 
-    if (data.password === body.password && data.loginId === body.loginId) {
+    if (await checkPassword(inputPassword, hash) && loginId === inputLoginId) {
+      await setUserSession(event, {
+        user: loginId
+      })
       return { status: 200, message: 'Login successfully' };
     } else {
       return { status: 400, message: 'Login Id or password is not correct'}
