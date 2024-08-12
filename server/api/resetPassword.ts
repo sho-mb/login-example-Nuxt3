@@ -1,26 +1,19 @@
-import { promises as fs } from 'fs';
-import { join } from 'path';
+import { userApi, userData } from '~/types/api';
 import { encryptPassword } from '~/utils/bcryptUtil';
 
 export default defineEventHandler(async (event) => {
-  const reset =  getQuery(event)
-  const { password: newPassword } = await readBody(event)
-  const dataPath = join(process.cwd(), 'data', 'data.json');
+  const query = getQuery(event);
+  const { password: newPassword } = await readBody(event);
 
   try {
-    const rawData = await fs.readFile(dataPath, 'utf8')
-    const { loginId, password, email } = JSON.parse(rawData) //Actually if you have backend search by password
-    if (password === reset.hash) {
-
+    const user = await $fetch<userData>(`${userApi}/find?password=${query.hash}`);
+    if (user) {
       const encryptedPassword = await encryptPassword(newPassword);
-      const newData = {
-        loginId: loginId,
-        password: encryptedPassword,
-        email: email,
-      }
-
       try {
-        await fs.writeFile(dataPath, JSON.stringify(newData, null, 2), 'utf8');
+        $fetch<userData>(`${userApi}/reset/${user.id}`, {
+          method: "PATCH",
+          body: encryptedPassword
+        });
         return { status: 200, message: 'New password saved successfully' };
       } catch (error) {
         return { status: 500, message: 'Failed to save data', error };
