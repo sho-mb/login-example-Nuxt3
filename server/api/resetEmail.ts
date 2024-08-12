@@ -1,14 +1,12 @@
-import { promises as fs } from 'fs';
-import { join } from 'path';
+import { userApi, userData } from "~/types/api"
 
 export default defineEventHandler(async (event) => {
   const { email: inputEmail } = await readBody(event)
-  const dataPath = join(process.cwd(), 'data', 'data.json');
   const { sendMail } = useNodeMailer()
 
   try {
-    const rawData = await fs.readFile(dataPath, 'utf8')
-    const { email, password: hash } = JSON.parse(rawData)
+    const { email, password: hash } = await $fetch<userData>(`${userApi}/find?email=${inputEmail}`)
+    
     const magicLink = `${process.env.BASE_URL}/reset?password=${hash}`
     const text = `Please reset your password via access to this link ${magicLink}`
 
