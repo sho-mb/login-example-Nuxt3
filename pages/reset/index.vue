@@ -1,11 +1,10 @@
 <template>
   <div>
-    <Forget />
+    <AuthPasswordReset />
   </div>
 </template>
 
 <script lang="ts" setup>
-import Forget from '~/components/auth/Forget.vue';
 
 
 </script>
